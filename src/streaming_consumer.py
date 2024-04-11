@@ -27,7 +27,7 @@ BOOTSTRAP_SERVERS = ["127.0.0.1:9092"]
 TOPIC = Topic("source-topic")
 
 def handle_message(message: Message[KafkaPayload]) -> Message[KafkaPayload]:
-    print(f"MSG: {message.payload}")
+    print(f"handle_message: {message.payload}")
     return message
 
 class ConsumerStrategyFactory(ProcessingStrategyFactory[KafkaPayload]):
@@ -42,17 +42,7 @@ class ConsumerStrategyFactory(ProcessingStrategyFactory[KafkaPayload]):
         commit: Commit,
         partitions: Mapping[Partition, int],
     ) -> ProcessingStrategy[KafkaPayload]:
-        producer = KafkaProducer(
-            build_kafka_configuration(
-                default_config={},
-                bootstrap_servers=BOOTSTRAP_SERVERS,
-            )
-        )
-
-        return RunTask(
-            handle_message,
-            Produce(producer, Topic("dest-topic"), CommitOffsets(commit))
-        )
+        return RunTask(handle_message, CommitOffsets(commit))
 
 consumer = KafkaConsumer(
     build_kafka_consumer_configuration(
@@ -74,7 +64,7 @@ processor = StreamProcessor(
 
 processor.run()
 
-while True:
-    msg = consumer.poll(timeout=1.0)
-    if msg is not None:
-        print(f"MSG: {msg.payload}")
+# while True:
+#     msg = consumer.poll(timeout=1.0)
+#     if msg is not None:
+#         print(f"Loop MSG: {msg.payload}")
