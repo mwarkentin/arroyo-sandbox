@@ -24,7 +24,7 @@ from arroyo.types import Commit, Message, Partition, Topic
 
 
 BOOTSTRAP_SERVERS = ["127.0.0.1:9092"]
-TOPIC = Topic("source-topic")
+TOPIC = Topic("src-topic")
 
 def handle_message(message: Message[KafkaPayload]) -> Message[KafkaPayload]:
     print(f"handle_message: {message.payload}")
@@ -42,7 +42,17 @@ class ConsumerStrategyFactory(ProcessingStrategyFactory[KafkaPayload]):
         commit: Commit,
         partitions: Mapping[Partition, int],
     ) -> ProcessingStrategy[KafkaPayload]:
-        return RunTask(handle_message, CommitOffsets(commit))
+        producer = KafkaProducer(
+            build_kafka_configuration(
+                default_config={},
+                bootstrap_servers=BOOTSTRAP_SERVERS,
+            )
+        )
+
+        return RunTask(
+            handle_message,
+            Produce(producer, Topic("dest-topic"), CommitOffsets(commit))
+        )
 
 consumer = KafkaConsumer(
     build_kafka_consumer_configuration(
