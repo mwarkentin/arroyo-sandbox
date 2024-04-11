@@ -28,7 +28,7 @@ TOPIC = Topic("src-topic")
 
 def handle_message(message: Message[KafkaPayload]) -> Message[KafkaPayload]:
     print(f"handle_message: {message.payload}")
-    return message
+    return message.payload
 
 class ConsumerStrategyFactory(ProcessingStrategyFactory[KafkaPayload]):
     """
